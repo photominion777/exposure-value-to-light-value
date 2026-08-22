@@ -17,7 +17,7 @@ DEFAULT_BIT_DEPTH = 14      # Sensor ADC Bit-Depth Resolution (12, 14, or 16)
 DEFAULT_EC = 0.0            # Artistic Bias / Exposure Compensation (stops)
 # =========================================================================
 
-# Strict fixed option lists to mirror exact camera/manufacturer steps
+# Global option lists representing the manufacturer display values
 N_OPTIONS = [
     0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.5, 2.8, 3.2,
     3.5, 4.0, 4.5, 5.0, 5.6, 6.3, 7.1, 8.0, 9.0, 10, 11, 13, 14, 16, 18,
@@ -30,101 +30,95 @@ T_OPTIONS = [
     "1/400", "1/500", "1/640", "1/800", "1/1000", "1/1250", "1/1600",
     "1/2000", "1/2500", "1/3200", "1/4000", "1/5000", "1/6400", "1/8000"
 ]
+S_OPTIONS = [
+    6.25, 8.0, 10.0, 12.5, 16.0, 20.0, 25.0, 32.0, 40.0, 50.0, 64.0, 80.0, 100.0,
+    125.0, 160.0, 200.0, 250.0, 320.0, 400.0, 500.0, 640.0, 800.0, 1000.0,
+    1250.0, 1600.0, 2000.0, 2500.0, 3200.0, 4000.0, 5000.0, 6400.0, 8000.0,
+    10000.0, 12500.0, 16000.0, 20000.0, 25600.0, 51200.0, 102400.0, 204800.0,
+    409600.0, 819200.0
+]
+BIT_DEPTH_OPTIONS = [12, 14, 16]
 
-
-def parse_shutter_string(t_str):
-    """Safely converts shorthand shutter string fractions into float numbers."""
-    if "/" in t_str:
-        num, denom = t_str.split("/")
-        return float(num) / float(denom)
-    return float(t_str)
+# Generate exact radiance values matching original logic
+RADIANCE_OPTIONS = []
+for index in range(-18, 67):
+    l_phys = (2**(index/3.0)) / (100 / 12.5)
+    if l_phys >= 10:
+        l_phys = round(l_phys, 1)
+    else:
+        l_phys = round(l_phys, 2)
+    if l_phys not in RADIANCE_OPTIONS:
+        RADIANCE_OPTIONS.append(l_phys)
 
 
 def get_lighting_name(lv):
-    """Classifies environmental lighting values into descriptive names."""
     ranges = [
-        (19.5, 22.5, "Industrial Laser / Lab Light"),
-        (18.5, 19.5, "Arc Welding / High-Power LED"),
-        (17.0, 18.5, "Studio Flash / Searchlight"),
-        (15.5, 17.0, "Extreme Sun (Snow/Sand)"),
-        (14.5, 15.5, "Sunny"),
-        (13.5, 14.5, "Hazy Sun"),
-        (12.5, 13.5, "Bright Overcast"),
-        (11.5, 12.5, "Overcast / Cloudy"),
-        (10.5, 11.5, "Deep Shade"),
-        (9.5, 10.5, "Sunset / Sunrise"),
-        (8.5, 9.5, "Very Dynamic Twilight"),
-        (7.5, 8.5, "Bright Street Lighting"),
-        (6.5, 7.5, "Blue Hour / City Night"),
-        (5.5, 6.5, "Bright Indoor"),
-        (4.5, 5.5, "Standard Indoor"),
-        (3.5, 4.5, "Living Room (Evening)"),
-        (2.5, 3.5, "Dim Indoor"),
-        (1.5, 2.5, "Distant Building Lights"),
-        (0.5, 1.5, "Very Dim Interior"),
-        (-0.5, 0.5, "Night Sky / City Skyline"),
-        (-1.5, -0.5, "Dim Night Street"),
-        (-2.5, -1.5, "Full Moon (Snow)"),
-        (-3.5, -2.5, "Full Moon (Landscape)"),
-        (-4.5, -3.5, "Quarter Moon"),
-        (-5.5, -4.5, "Crescent Moon"),
-        (-7.5, -5.5, "Starlight Night")
+        (19.5, 22.5, "Industrial Laser / Lab Light"), (18.5, 19.5, "Arc Welding / High-Power LED"),
+        (17.0, 18.5, "Studio Flash / Searchlight"), (15.5, 17.0, "Extreme Sun (Snow/Sand)"),
+        (14.5, 15.5, "Sunny"), (13.5, 14.5, "Hazy Sun"),
+        (12.5, 13.5, "Bright Overcast"), (11.5, 12.5, "Overcast / Cloudy"),
+        (10.5, 11.5, "Deep Shade"), (9.5, 10.5, "Sunset / Sunrise"),
+        (8.5, 9.5, "Very Dynamic Twilight"), (7.5, 8.5, "Bright Street Lighting"),
+        (6.5, 7.5, "Blue Hour / City Night"), (5.5, 6.5, "Bright Indoor"),
+        (4.5, 5.5, "Standard Indoor"), (3.5, 4.5, "Living Room (Evening)"),
+        (2.5, 3.5, "Dim Indoor"), (1.5, 2.5, "Distant Building Lights"),
+        (0.5, 1.5, "Very Dim Interior"), (-0.5, 0.5, "Night Sky / City Skyline"),
+        (-1.5, -0.5, "Dim Night Street"), (-2.5, -1.5, "Full Moon (Snow)"),
+        (-3.5, -2.5, "Full Moon (Landscape)"), (-4.5, -3.5, "Quarter Moon"),
+        (-5.5, -4.5, "Crescent Moon"), (-7.5, -5.5, "Starlight Night")
     ]
     for low, high, name in ranges:
         if low <= lv < high:
             return name
     return "Transition / Mixed Light"
 
-
+# ===================================================================================================
+# LINEAR RAW EXPOSURE METER SIMULATOR (PART 2: CALCULATION CORE & CLI RENDERING)
+# ===================================================================================================
 def execute_linear_raw_meter(L_input, N, t_str, S, bit_depth, ec_user):
-    """Computes exposure deviations and renders the visual sensor metrics."""
-    if N not in N_OPTIONS or t_str not in T_OPTIONS:
-        print("Error: Input Aperture or Shutter Speed invalid.")
-        return
-
-    idx_N, idx_t = N_OPTIONS.index(N), T_OPTIONS.index(t_str)
-
-    # 1. Map UI display values to exact mathematical APEX log steps
+    idx_N = N_OPTIONS.index(N)
+    idx_t = T_OPTIONS.index(t_str)
+    idx_S = S_OPTIONS.index(S)
+    
     N_exact = 1.0 * (2**(1/6))**(idx_N - 3)
     t_exact = 1.0 * (2**(-1/3))**idx_t
+    # CALIBRATION FIX: ISO 100 sits at index 12 in the full array, shift is -12
+    S_exact = 100.0 * (2**(1/3))**(idx_S - 12)
 
-    L = float(L_input)
+    L_eff_peak = float(L_input)
     K = 12.5
-    LV_ext = math.log2(L * (100 / K))
+
+    if L_eff_peak > 0:
+        LV_ext = math.log2((100.0 * L_eff_peak) / K)
+    else:
+        LV_ext = -5.0
+        
     lighting_name = get_lighting_name(LV_ext)
+    Y_sat = (2**bit_depth) - 1
+    y_sat = math.log2(Y_sat)
 
-    # 2. Setup fixed physical sensor boundaries and APEX log variables
-    Y_sat = (2**bit_depth) - 1            # Constant Hardware Wall
-    y_sat = math.log2(Y_sat)               # Constant APEX Ceiling
+    av = math.log2(N_exact**2)
+    tv = math.log2(t_exact)
+    sv_raw = math.log2(S_exact / 100.0)
 
-    av = math.log2(N_exact**2)             # Aperture Value
-    tv = math.log2(t_exact)                # Time Value
-    sv_raw = math.log2(S / 100.0)          # Sensor Gain
+    analog_hardware_base = 31.00
+    kappa_log2 = analog_hardware_base - math.log2(2**bit_depth - 1)
+    photometric_correction = math.log2(K / 100.0)
 
-    # 3. System Calibration: Lock Sunny-16 baseline
-    idx_f16, idx_t125 = N_OPTIONS.index(16), T_OPTIONS.index("1/125")
-    av_cal = math.log2((1.0 * (2**(1/6))**(idx_f16 - 3))**2)
-    tv_cal = math.log2(1.0 * (2**(-1/3))**idx_t125)
-
-    calibration_constant = y_sat - 15.0 - tv_cal + av_cal
-    e_peak = LV_ext + calibration_constant  # Scene peak radiance
-
-    # Calculate peak signal value as a direct function of gain
+    e_peak = kappa_log2 + LV_ext + photometric_correction
     y_peak = e_peak - av + tv + sv_raw
     Y_peak_linear = 2**y_peak
 
-    # 4. Process exposure deviations and shift by user Artistic Bias
     delta_y_ETTR = y_peak - y_sat
     delta_y_Display = delta_y_ETTR - ec_user
 
-    # 5. Build the ASCII viewfinder scale matrix (Absolute Grid Lock)
+    # Build the ASCII viewfinder scale matrix (Absolute Grid Lock)
     scale_hdr_ticks = []
     scale_ticks = []
     
     for index in range(-15, 16):
         tick_value = index / 3.0
         
-        # Upper row: Numbers at main stops, else spaces
         if index % 3 == 0:
             val_num = int(tick_value)
             if val_num > 0:
@@ -136,7 +130,6 @@ def execute_linear_raw_meter(L_input, N, t_str, S, bit_depth, ec_user):
         else:
             scale_hdr_ticks.append("  ")
             
-        # Lower row: Viewfinder needle indicator and ticks
         if index == -15 and delta_y_Display < -5.1:
             scale_ticks.append(" ◀")
         elif index == 15 and delta_y_Display > 5.1:
@@ -152,10 +145,7 @@ def execute_linear_raw_meter(L_input, N, t_str, S, bit_depth, ec_user):
     scale_vis = "   " + "".join(scale_ticks)
     clipping_ratio = (Y_peak_linear / Y_sat) * 100.0
 
-
-    # =========================================================================
-    # [ RENDER TERMINAL OUTPUT ENGINE ]
-    # =========================================================================
+    # Render Terminal Output Stream
     clip_msg = "[🚨 CLIPPED AT HARDWARE WALL]" if Y_peak_linear > Y_sat else ""
     output_text = f"""==================================================
 [ INTERNAL LINEAR RAW METER SIMULATION TERMINAL ]
@@ -202,12 +192,15 @@ Displayed RAW Meter Indicator (Δy_Display): {delta_y_Display:+.2f} stops
 
     y_hist = gmm_mid * 0.7 + gmm_shd * 0.4 + gmm_hgt * 0.3
 
-    # Plot regions
+    # Green STRICTLY stops and cuts off right at the wall
     plt.fill_between(
         x_vals, 0, y_hist, where=(x_vals <= Y_sat),
         color='#2ca02c', alpha=0.6, label='Valid RAW Data'
     )
-    if Y_peak_linear > Y_sat:
+    
+    # TOLERANCE PUFFER LOCK: Red only triggers if peak actively exceeds wall by +50.0 DN
+    tolerance_puffer = 50.0
+    if Y_peak_linear > (Y_sat + tolerance_puffer):
         plt.fill_between(
             x_vals, 0, y_hist, where=(x_vals > Y_sat),
             color='#d62728', alpha=0.6, label='CRITICAL: Clipping'
