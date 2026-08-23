@@ -22,7 +22,7 @@
 To resolve the engineering dilemmas of continuous sensor-parsing overhead and battery drain during live view, this framework supports a highly efficient, hybrid implementation:
 
 1. **The Static Phase (The Roadmap):** The photographer triggers a single, high-speed linear RAW scan. The system processes this "snapshot" once to map the exact scene boundaries and lock a static RAW histogram.
-2. **The Dynamic Phase (The Real-Time Delta):** As the shooter twists the physical aperture, shutter, or ISO dials, the engine **does not redraw** the complex histogram. Instead, it feeds the single locked peak value into the lightweight, additive APEX math engine ($y_c = e_c - av + tv + sv_{\text{raw}}$).
+2. **The Dynamic Phase (The Real-Time Delta):** As the shooter twists the physical aperture, shutter, or ISO dials, the engine **does not redraw** the complex histogram. Instead, it feeds the single locked peak value into the lightweight, additive APEX math engine ($y_i = e_i - av + tv + sv_{\text{raw}}$).
 3. **The Tactical Display:** The viewfinder metering needle ($\Delta y_{\text{Display}}$) updates flawlessly in real time at native EVF frame rates with zero processing lag, delivering immediate exposure feedback without thermal compounding or excessive power drain.
 
 
