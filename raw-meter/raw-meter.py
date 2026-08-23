@@ -101,8 +101,8 @@ def execute_linear_raw_meter(L_input, N, t_str, S, bit_depth, ec_user):
     tv = math.log2(t_exact)
     sv_raw = math.log2(S_exact / 100.0)
 
-    analog_hardware_base = 31.00
-    kappa_log2 = analog_hardware_base - math.log2(2**bit_depth - 1)
+    analog_hardware_base = 3.00
+    kappa_log2 = analog_hardware_base + math.log2(2**bit_depth - 1)
     photometric_correction = math.log2(K / 100.0)
 
     e_peak = kappa_log2 + LV_ext + photometric_correction
@@ -178,7 +178,7 @@ Displayed RAW Meter Indicator (Δy_Display): {delta_y_Display:+.2f} stops
 
     print(output_text)
 
-    # =========================================================================
+      # =========================================================================
     # [ DRAW VISUAL SENSOR DASHBOARD VIA MATPLOTLIB ]
     # =========================================================================
     plt.figure(figsize=(11, 5))
@@ -212,14 +212,19 @@ Displayed RAW Meter Indicator (Δy_Display): {delta_y_Display:+.2f} stops
         label=f'Hardware Wall (Y_sat: {Y_sat:,} DN)'
     )
 
+    # DYNAMISCHER TITEL: Zeigt die gewählte Domain und die echte Sättzungswand live
     plt.title(
-        'VISUAL SENSOR DASHBOARD\nPhysical Signal Distribution on the '
-        'Linear RAW Sensor', fontsize=12, fontweight='bold', pad=15
+        f'VISUAL SENSOR DASHBOARD ({bit_depth}-bit Domain)\n'
+        f'Physical Signal Distribution (Max Capacity: {Y_sat:,} DN)', 
+        fontsize=12, fontweight='bold', pad=15
     )
+    
+    # DYNAMISCHE ACHSE: Macht die Bit-Invarianz der Kurve didaktisch verständlich
     plt.xlabel(
-        'Linear Sensor Signal Level [Digital Numbers (DN)]',
+        f'Linear Sensor Signal Level [0 to {Y_sat:,} Digital Numbers (DN)]',
         fontsize=10, labelpad=8
     )
+    
     plt.ylabel('Pixel Distribution Frequency', fontsize=10, labelpad=8)
     plt.xlim(0, Y_sat * 1.3)
     plt.ylim(0, 1.1)
