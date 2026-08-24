@@ -2,13 +2,17 @@
 
 © 2026 photominion777. All rights reserved.
 
-This framework, mathematical model, UI concept (Dual-Feedback Mechanism), and the accompanying source code are the exclusive intellectual property of photominion777.
+This repository contains original written documentation, software, UI designs, and a mathematical framework developed by photominion777. Copyright applies to the original expression of these materials and to other copyrightable elements of the project.
 
-## Permitted Uses
-1. Personal, academic, and non-commercial research use is strictly permitted.
-2. Reviewing, testing, and running the interactive Google Colab simulation for educational purposes is permitted.
-3. Any academic reuse of these equations and documentation must credit photominion777 and link back to this repository.
+### Permitted Uses:
+1. Academic citation, non-commercial peer-review, and personal educational research are strictly permitted.
+2. Running, testing, and sharing the interactive Google Colab simulation dashboard for educational purposes is permitted.
+3. Academic reuse of the published documentation and other copyrightable materials must credit photominion777 and link back to this repository.
 
-## Prohibited Uses
-1. Any commercial exploitation, modification, or integration of these equations, mathematical logic, or UI dashboard workflows into digital cameras, firmware, raw-processing software, or hardware light meters is STRICTLY PROHIBITED.
-2. Commercial entities must acquire a written commercial license from the author prior to any implementation.
+### Prohibited Uses:
+1. Commercial use of the published documentation, software/dashboard, and other copyrightable materials requires prior written permission from the author.
+2. Commercial implementation of the method described in this work is not granted by this notice. Parties interested in commercial implementation should contact the author for licensing terms.
+
+### IP Notice:
+
+Copyright applies to the original written documentation, software, and other copyrightable materials of this project. This notice does not claim copyright over mathematical facts, equations, methods, algorithms, or ideas as such. Any applicable intellectual-property rights concerning the underlying method are a separate matter.
