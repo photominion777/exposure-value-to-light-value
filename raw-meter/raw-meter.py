@@ -120,10 +120,9 @@ ADC Range Utilization              :  {clipping_ratio:.1f}%
 Absolute Pixel Clipping            :  {clipped_mpx:.2f} Mpx / {total_mpx:.0f} Mpx
 Percentage Pixel Clipping          :  {percentage_pixel_clipping:.2f} % of Sensor Area
 ---------------------------------------------------------------------------------------------------
-RAW Signal Index (delta_y_display) :  {delta_y_Display:+.2f} Stops (Normed: 0 RSI = 12.5% Saturation)
-User Artistic Override (EC_user)   :  {ec_user:+.2f} Stops
+Artistic Override (EC_user)        :  {ec_user:+.2f} Stops
 ---------------------------------------------------------------------------------------------------
-Displayed RAW Viewfinder Index (delta_y_display): {delta_y_Display:+.2f} Stops
+RSI Deviation (delta_y_display)    : {delta_y_Display:+.2f} Stops
 
 {scale_header}
 {scale_visual}
